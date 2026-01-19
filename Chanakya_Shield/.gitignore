@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+target/
+venv/
+__pycache__/
+
+# Datasets (Too large for git usually, unless LFS)
+datasets/
+TestingDatasets/
+
+# Artifacts
+*.pkl
+*.class
+*.log
+
+# Large Database Files
+database/*.csv
+
+# Secrets
+.env
