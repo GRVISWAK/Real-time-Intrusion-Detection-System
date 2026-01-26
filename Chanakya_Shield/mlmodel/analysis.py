@@ -211,14 +211,12 @@ def process_batch():
         features_list = [item['features'] for item in batch]
         df_batch = pd.DataFrame(features_list, columns=ALL_FEATURE_COLUMNS)
         
-        # Apply feature selection if available
-        if selected_features_idx is not None:
-            df_selected = df_batch.iloc[:, selected_features_idx]
-        else:
-            df_selected = df_batch
+        # Batch scaling FIRST (on all 17 features)
+        X_scaled = scaler.transform(df_batch)
         
-        # Batch scaling (efficient)
-        X_scaled = scaler.transform(df_selected)
+        # THEN apply feature selection if available
+        if selected_features_idx is not None:
+            X_scaled = X_scaled[:, selected_features_idx]
         
         # Batch anomaly detection
         anomaly_scores = iso_model.predict(X_scaled)
