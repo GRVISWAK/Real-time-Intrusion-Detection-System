@@ -7,6 +7,7 @@ const SimulateAttack = () => {
   const [isStarting, setIsStarting] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [activeAttack, setActiveAttack] = useState("");
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -24,14 +25,16 @@ const SimulateAttack = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const startSimulation = async () => {
+  const startSimulation = async (attackType = "") => {
     setIsStarting(true);
+    setActiveAttack(attackType || "all");
     try {
-      const res = await fetch("http://localhost:8080/api/simulate-attack");
+      const url = attackType 
+        ? `http://localhost:8080/api/simulate-attack?type=${attackType}`
+        : "http://localhost:8080/api/simulate-attack";
+      const res = await fetch(url);
       const text = await res.text();
-      // alert(text); // Basic alert removed for better UX
       setIsRunning(true);
-      // navigate("/packets"); // Stay on page to see status
     } catch (err) {
       console.error("Failed to start simulation:", err);
     } finally {
@@ -44,6 +47,7 @@ const SimulateAttack = () => {
     try {
       const res = await fetch("http://localhost:8080/api/stop-simulation");
       setIsRunning(false);
+      setActiveAttack("");
     } catch (err) {
       console.error("Failed to stop simulation:", err);
     } finally {
@@ -51,21 +55,48 @@ const SimulateAttack = () => {
     }
   };
 
+  const attackTypes = [
+    { id: "ddos", name: "DDoS Attack", icon: "🌊", color: "#ff4444" },
+    { id: "portscan", name: "Port Scan", icon: "🔍", color: "#ff6b35" },
+    { id: "dos-hulk", name: "DoS Hulk", icon: "💥", color: "#f7931e" },
+    { id: "ssh", name: "SSH Brute Force", icon: "🔐", color: "#fbb034" },
+    { id: "web", name: "Web Attack", icon: "🌐", color: "#ffca3a" },
+    { id: "bot", name: "Botnet Traffic", icon: "🤖", color: "#ff85a1" },
+    { id: "benign", name: "Benign Traffic", icon: "✅", color: "#00d084" },
+  ];
+
   return (
     <div className="simulate-container">
       <h2>THREAT SIMULATION</h2>
       <p>
-        Initiate controlled cyber attacks using the CICIDS2017 replay engine.
+        Initiate controlled cyber attacks using specialized injection engines.
       </p>
 
       <div className="control-panel">
-        <div className="simulate-buttons">
+        <div className="attack-grid">
+          {attackTypes.map((attack) => (
+            <button
+              key={attack.id}
+              className="attack-btn"
+              style={{ borderColor: attack.color }}
+              onClick={() => startSimulation(attack.id)}
+              disabled={isStarting || isRunning}
+            >
+              <span className="attack-icon" style={{ color: attack.color }}>
+                {attack.icon}
+              </span>
+              <span className="attack-name">{attack.name}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="all-attacks-section">
           <button
             className="simulate-btn start"
-            onClick={startSimulation}
+            onClick={() => startSimulation()}
             disabled={isStarting || isRunning}
           >
-            {isStarting ? "INITIALIZING..." : "INITIATE ATTACK"}
+            {isStarting ? "INITIALIZING..." : "🎯 RUN ALL ATTACKS"}
           </button>
 
           <button
@@ -73,13 +104,15 @@ const SimulateAttack = () => {
             onClick={stopSimulation}
             disabled={!isRunning || isStopping}
           >
-            {isStopping ? "TERMINATING..." : "ABORT"}
+            {isStopping ? "TERMINATING..." : "⛔ ABORT SIMULATION"}
           </button>
         </div>
 
         <div className="terminal-status">
           <span className="terminal-line typing-cursor">
-            STATUS: {isRunning ? "SIMULATION ACTIVE - GENERATING TRAFFIC..." : "SYSTEM STANDBY - READY"}
+            STATUS: {isRunning 
+              ? `SIMULATING ${activeAttack.toUpperCase()} - INJECTING PACKETS...` 
+              : "SYSTEM STANDBY - READY"}
           </span>
         </div>
       </div>

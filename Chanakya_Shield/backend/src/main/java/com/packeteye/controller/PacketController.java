@@ -57,8 +57,8 @@ public class PacketController {
             if (analysisProcess != null && analysisProcess.isAlive()) {
                 return " analysis.py is already running.";
             }
-            String pythonExe = "C:\\Users\\Vishnu Prahalathan\\AppData\\Local\\Programs\\Python\\Python313\\python.exe";
-            String workingDir = "F:\\packeteye-pro";
+            String pythonExe = "D:\\softwares\\python.exe";
+            String workingDir = "D:\\Packeteye\\Chanakya_Shield";
             String scriptPath = workingDir + "\\mlmodel\\analysis.py";
 
             analysisProcess = runPythonScript(pythonExe, scriptPath, workingDir);
@@ -70,17 +70,47 @@ public class PacketController {
     }
 
     @GetMapping("/simulate-attack")
-    public String simulateAttack() {
+    public String simulateAttack(@RequestParam(required = false) String type) {
         try {
             if (simulationProcess != null && simulationProcess.isAlive()) {
                 return " Simulation is already running.";
             }
-            String pythonExe = "C:\\Users\\Vishnu Prahalathan\\AppData\\Local\\Programs\\Python\\Python313\\python.exe";
-            String workingDir = "F:\\packeteye-pro";
-            String scriptPath = workingDir + "\\Testing\\replay_from_csv.py";
+            String pythonExe = "D:\\softwares\\python.exe";
+            String workingDir = "D:\\Packeteye\\Chanakya_Shield";
+            String scriptPath = workingDir + "\\Testing\\inject_attacks.py";
 
-            simulationProcess = runPythonScript(pythonExe, scriptPath, workingDir);
-            return "🎯 Attack simulation started successfully (replay_from_csv.py)";
+            // Build command with attack type if provided
+            List<String> command = new ArrayList<>();
+            command.add(pythonExe);
+            command.add(scriptPath);
+            if (type != null && !type.isEmpty()) {
+                command.add(type);
+            }
+
+            ProcessBuilder pb = new ProcessBuilder(command);
+            pb.directory(new File(workingDir));
+            pb.redirectErrorStream(true);
+
+            Map<String, String> env = pb.environment();
+            env.put("PYTHONIOENCODING", "utf-8");
+            env.put("PYTHONUTF8", "1");
+
+            simulationProcess = pb.start();
+
+            new Thread(() -> {
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(simulationProcess.getInputStream(), "UTF-8"))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        System.out.println("[PYTHON] " + line);
+                    }
+                } catch (IOException e) {
+                    System.err.println("Error reading Python process output: " + e.getMessage());
+                }
+            }).start();
+
+            String attackName = (type != null) ? type.toUpperCase() : "ALL";
+            return "🎯 " + attackName + " attack simulation started successfully";
         } catch (IOException e) {
             e.printStackTrace();
             return " Failed to start simulation: " + e.getMessage();
@@ -93,8 +123,8 @@ public class PacketController {
             if (telegramProcess != null && telegramProcess.isAlive()) {
                 return " Telegram service already running.";
             }
-            String pythonExe = "C:\\Users\\Vishnu Prahalathan\\AppData\\Local\\Programs\\Python\\Python313\\python.exe";
-            String workingDir = "F:\\packeteye-pro";
+            String pythonExe = "D:\\softwares\\python.exe";
+            String workingDir = "D:\\Packeteye\\Chanakya_Shield";
             String scriptPath = workingDir + "\\Testing\\telegram_alert_service_whitelist.py";
 
             telegramProcess = runPythonScript(pythonExe, scriptPath, workingDir);
@@ -226,7 +256,7 @@ public class PacketController {
 
     @GetMapping("/packets/features")
     public List<String> getSelectedFeatures() {
-        File file = new File("F:\\packeteye-pro\\selected_features.json");
+        File file = new File("D:\\Packeteye\\Chanakya_Shield\\selected_features.json");
         if (!file.exists()) {
             return List.of("No features selected yet.");
         }
