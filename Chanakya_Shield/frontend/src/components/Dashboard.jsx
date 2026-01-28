@@ -37,6 +37,20 @@ function Dashboard() {
     saveAs(blob, 'captured_packets.csv');
   };
 
+  const clearLog = () => {
+    if (window.confirm('Are you sure you want to clear all packet logs? This action cannot be undone.')) {
+      axios.delete('http://localhost:8080/api/packets')
+        .then(res => {
+          alert(res.data.message || 'Packets cleared successfully!');
+          setPackets([]);
+        })
+        .catch(err => {
+          console.error('Failed to clear packets:', err);
+          alert('Failed to clear packets. Please try again.');
+        });
+    }
+  };
+
   return (
     <div style={{ padding: '20px' }}>
       <h2>Captured Packets</h2>
@@ -62,8 +76,22 @@ function Dashboard() {
           <option value="1">ICMP (1)</option>
         </select>
 
-        <button onClick={downloadCSV} style={{ padding: '6px' }}>
+        <button onClick={downloadCSV} style={{ padding: '6px', marginRight: '10px' }}>
           Download CSV
+        </button>
+
+        <button 
+          onClick={clearLog} 
+          style={{ 
+            padding: '6px', 
+            backgroundColor: '#dc3545', 
+            color: 'white', 
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          🗑️ Clear Log
         </button>
       </div>
 

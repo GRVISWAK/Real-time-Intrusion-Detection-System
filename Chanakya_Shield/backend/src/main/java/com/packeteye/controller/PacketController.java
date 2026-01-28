@@ -182,6 +182,24 @@ public class PacketController {
         return packetRepository.findTop500ByOrderByTimestampDesc();
     }
 
+    @DeleteMapping("/packets")
+    public Map<String, Object> clearAllPackets() {
+        try {
+            long count = packetRepository.count();
+            packetRepository.deleteAll();
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Successfully cleared " + count + " packets from database");
+            response.put("deletedCount", count);
+            return response;
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Failed to clear packets: " + e.getMessage());
+            return response;
+        }
+    }
+
     @GetMapping("/packets/summary")
     public Map<String, Object> getSummary() {
         long totalPackets = packetRepository.count();

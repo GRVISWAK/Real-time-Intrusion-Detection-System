@@ -40,21 +40,53 @@ const PacketsTable = () => {
     }
   };
 
+  const clearLog = async () => {
+    if (window.confirm('Are you sure you want to clear all packet logs? This action cannot be undone.')) {
+      try {
+        const res = await fetch('http://localhost:8080/api/packets', {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        alert(data.message || 'Packets cleared successfully!');
+        setPackets([]);
+      } catch (err) {
+        console.error('Failed to clear packets:', err);
+        alert('Failed to clear packets. Please try again.');
+      }
+    }
+  };
+
   return (
     <div className="packets-container">
       <div className="header-row">
         <h2>📡 Captured Packets</h2>
-        <button
-          className={`stop-btn ${isStopped ? "stopped" : ""}`}
-          onClick={stopCapture}
-          disabled={isStopping || isStopped}
-        >
-          {isStopped
-            ? "✅ Stopped"
-            : isStopping
-            ? "⏳ Stopping..."
-            : "🛑 Stop Packet Capture"}
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className={`stop-btn ${isStopped ? "stopped" : ""}`}
+            onClick={stopCapture}
+            disabled={isStopping || isStopped}
+          >
+            {isStopped
+              ? "✅ Stopped"
+              : isStopping
+              ? "⏳ Stopping..."
+              : "🛑 Stop Packet Capture"}
+          </button>
+          <button
+            onClick={clearLog}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            🗑️ Clear Log
+          </button>
+        </div>
       </div>
 
       <table>
